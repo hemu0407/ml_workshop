@@ -1,11 +1,12 @@
 import requests
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import plotly.express as px
 
 # Fetch COVID-19 data
 url = "https://disease.sh/v3/covid-19/countries/usa"
@@ -67,35 +68,36 @@ svm_classifier.fit(X_train_class, y_train_class)
 # Predict classification for Day 31 (whether cases exceed 50k)
 pred_class = svm_classifier.predict(np.array([[31]]))
 
-# Streamlit UI
-st.set_page_config(page_title="COVID-19 Cases Prediction in USA", layout="wide")
+# Streamlit UI customizations
+st.set_page_config(page_title="COVID-19 Prediction in USA", layout="wide", initial_sidebar_state="expanded")
 
 # Title and Description
-st.title("COVID-19 Cases Prediction in the USA")
-st.write("""
-    This app uses machine learning models (SVM) to predict the number of COVID-19 cases for the next day.
-    You can choose a specific day, and the model will predict:
-    1. The number of cases for that day using regression (SVM).
-    2. Whether the cases will exceed 50,000 using classification (SVM).
+st.title("COVID-19 Prediction App")
+st.markdown("""
+    This app predicts the number of COVID-19 cases for the next day using SVM models.
+    - **SVM Regression** predicts the number of cases for any given day.
+    - **SVM Classification** predicts whether the cases will exceed 50,000.
 """)
 
-# Input for the day number
-st.sidebar.header("Enter Day for Prediction")
+# Sidebar for Input
+st.sidebar.header("Prediction Settings")
 day_input = st.sidebar.number_input("Enter day number (e.g., 31 for prediction)", min_value=1, max_value=100, value=31)
 
-# Display Historical Data Chart
-st.subheader("Historical COVID-19 Cases in USA (Last 30 days)")
-st.write("This chart shows the simulated historical data of COVID-19 cases over the last 30 days.")
+# Add an Expander for the description of the models
+with st.expander("What is SVM?"):
+    st.write("""
+        **SVM Regression** is used for predicting continuous values like the number of COVID-19 cases.
+        **SVM Classification** is used for classifying data, here it's used to predict if cases will exceed 50,000.
+    """)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(df_historical['day'], df_historical['cases'], marker='o', color='b', label="Cases")
-ax.set_title("COVID-19 Cases (Last 30 Days)", fontsize=16)
-ax.set_xlabel("Day", fontsize=12)
-ax.set_ylabel("Number of Cases", fontsize=12)
-ax.grid(True)
-st.pyplot(fig)
+# Display Historical Data Chart using Plotly
+st.subheader("Historical COVID-19 Cases (Last 30 Days)")
+st.write("The chart below shows the simulated historical data of COVID-19 cases for the last 30 days.")
 
-# Model Predictions
+fig = px.line(df_historical, x="day", y="cases", title="Simulated Historical COVID-19 Cases", labels={"day": "Day", "cases": "Number of Cases"})
+st.plotly_chart(fig)
+
+# Model Predictions Button
 if st.button("Predict"):
     # Predict continuous cases using the SVM regression model
     prediction_svm = svm_model.predict([[day_input]])
@@ -114,19 +116,21 @@ if st.button("Predict"):
 
     # Show a summary
     st.write("""
-    The model has predicted the number of COVID-19 cases for the given day based on the past data. The classification
-    model also predicts whether the number of cases will exceed 50,000.
+    The model predicts the number of COVID-19 cases for the selected day. It also predicts if the cases will exceed 50,000.
     """)
 
-# Display additional information
-st.sidebar.subheader("Model Information")
-st.sidebar.write("""
-    - **SVM Regression**: Predicts the number of COVID-19 cases for a specific day (continuous prediction).
-    - **SVM Classification**: Predicts whether the cases will exceed 50,000 for a specific day (binary classification).
-""")
+# Footer (can add any message or link)
+st.markdown("---")
+st.markdown("Created by [Your Name](https://yourwebsite.com)")
 
-st.sidebar.subheader("About")
-st.sidebar.write("""
-    This app was created to demonstrate how machine learning can be applied to predict COVID-19 cases.
-    The data used for historical simulations is random and generated for demonstration purposes.
-""")
+# Customize the theme (Optional)
+st.markdown("""
+    <style>
+        .stApp {
+            background-color: #f4f4f9;
+        }
+        .sidebar .sidebar-content {
+            background-color: #f7f7f9;
+        }
+    </style>
+""", unsafe_allow_html=True)
