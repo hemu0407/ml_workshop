@@ -58,20 +58,37 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 svm_model = SVR(kernel='rbf')
 svm_model.fit(X_train, y_train)
 
-# Predict using SVM
-next_day = np.array([[31]])
-predicted_cases_svm = svm_model.predict(next_day)
-
 # Streamlit Interface
 st.title("COVID-19 Cases Prediction in USA")
 st.write("Using SVM to predict COVID-19 cases for the next day.")
 
-# User Input for prediction
+# User Input for prediction (day number input)
 day_input = st.number_input("Enter day number (e.g., 31 for prediction)", min_value=1, max_value=100)
 
+# Prediction logic that updates based on user input
 if st.button("Predict"):
     prediction_svm = svm_model.predict([[day_input]])
     st.write(f"Predicted cases for day {day_input} using SVM: {int(prediction_svm[0])}")
+
+    # Plotting predicted cases in historical data chart
+    st.subheader(f"Historical Data with Predicted Cases for Day {day_input}")
+    
+    # Adding predicted cases to the historical data
+    historical_cases_with_prediction = historical_cases.tolist() + [int(prediction_svm[0])]
+    df_historical_extended = pd.DataFrame({
+        "day": list(range(1, 32)),
+        "cases": historical_cases_with_prediction
+    })
+    
+    # Plot the data with the prediction included
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(df_historical_extended["day"], df_historical_extended["cases"], marker='o', label="Cases", color='blue')
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Cases")
+    ax.set_title(f"COVID-19 Cases Prediction (up to Day {day_input})")
+    ax.grid(True)
+    ax.legend()
+    st.pyplot(fig)
 
 # Detailed Visualization: Historical Data
 st.subheader("Historical COVID-19 Cases, Deaths, and Recoveries (Last 30 Days)")
