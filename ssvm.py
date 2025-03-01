@@ -56,10 +56,13 @@ predicted_cases_svm = svm_model.predict(next_day)
 df_historical["high_case"] = (df_historical["cases"] > 50000).astype(int)  # 1 if cases > 50k, else 0
 y_class = df_historical["high_case"]  # Classification target
 
+# Split the data again for classification (ensure that it uses the same split as regression)
+X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(X, y_class, test_size=0.2, random_state=42)
+
 # Train the SVM model for classification (predict if cases exceed 50k)
-svm_classifier = SVR(kernel='rbf')  # We can still use SVM, but it needs to be for classification
-y_class = y_class.astype(float)  # SVR requires float for target labels
-svm_classifier.fit(X_train, y_class)
+svm_classifier = SVR(kernel='rbf')  # SVR can also be used for classification tasks
+y_train_class = y_train_class.astype(float)  # SVR requires float for target labels
+svm_classifier.fit(X_train_class, y_train_class)
 
 # Predict classification for Day 31 (whether cases exceed 50k)
 pred_class = svm_classifier.predict(np.array([[31]]))
