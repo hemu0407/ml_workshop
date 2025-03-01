@@ -1,12 +1,11 @@
 import requests
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import streamlit as st
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-import plotly.express as px
 
 # Fetch COVID-19 data
 url = "https://disease.sh/v3/covid-19/countries/usa"
@@ -26,111 +25,53 @@ covid_data = {
     "deathsPerMillion": data["deathsPerOneMillion"],
 }
 
-# Convert the data into a Pandas DataFrame
+# Convert to Pandas DataFrame
 df = pd.DataFrame([covid_data])
 
-# Generate random historical data for simulation (last 30 days)
+# Generate random historical data
 np.random.seed(42)
-historical_cases = np.random.randint(30000, 70000, size=30)  # Simulated last 30 days of cases
+historical_cases = np.random.randint(30000, 70000, size=30)  # Last 30 days cases
 historical_deaths = np.random.randint(500, 2000, size=30)
-
-# Create a DataFrame for historical data
 df_historical = pd.DataFrame({"cases": historical_cases, "deaths": historical_deaths})
 df_historical["day"] = range(1, 31)
 
-# Prepare the data for SVM (SVR) regression model
-X = df_historical[["day"]]  # Feature: Day
-y = df_historical["cases"]  # Target: Cases
-
-# Split data into training and testing sets
+# Prepare data for regression
+X = df_historical[["day"]]
+y = df_historical["cases"]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# SVM Regression Model for predicting the number of cases
+# SVM Regression Model
 svm_model = SVR(kernel='rbf')
 svm_model.fit(X_train, y_train)
 
-# Predict the number of cases for the next day (e.g., Day 31)
+# Predict using SVM
 next_day = np.array([[31]])
 predicted_cases_svm = svm_model.predict(next_day)
 
-# For classification (whether the cases will exceed 50,000), use SVM with a classification approach
-df_historical["high_case"] = (df_historical["cases"] > 50000).astype(int)  # 1 if cases > 50k, else 0
-y_class = df_historical["high_case"]  # Classification target
+# Streamlit Interface
+st.title("COVID-19 Cases Prediction in USA")
+st.write("Predicting COVID-19 cases for the next day using SVM.")
 
-# Split the data again for classification (ensure that it uses the same split as regression)
-X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(X, y_class, test_size=0.2, random_state=42)
+# User Input
+day_input = st.number_input("Enter day number (e.g., 31 for prediction)", min_value=1, max_value=100)
 
-# Train the SVM model for classification (predict if cases exceed 50k)
-svm_classifier = SVR(kernel='rbf')  # SVR can also be used for classification tasks
-y_train_class = y_train_class.astype(float)  # SVR requires float for target labels
-svm_classifier.fit(X_train_class, y_train_class)
+# SVM Prediction
+if st.button("Predict"):
+    prediction_svm = svm_model.predict([[day_input]])
+    st.write(f"Predicted cases for day {day_input} using SVM: {int(prediction_svm[0])}")
 
-# Predict classification for Day 31 (whether cases exceed 50k)
-pred_class = svm_classifier.predict(np.array([[31]]))
-
-# Streamlit UI customizations
-st.set_page_config(page_title="COVID-19 Prediction in USA", layout="wide", initial_sidebar_state="expanded")
-
-# Title and Description
-st.title("COVID-19 Prediction App")
-st.markdown("""
-    This app predicts the number of COVID-19 cases for the next day using SVM models.
-    - **SVM Regression** predicts the number of cases for any given day.
-    - **SVM Classification** predicts whether the cases will exceed 50,000.
-""")
-
-# Sidebar for Input
-st.sidebar.header("Prediction Settings")
-day_input = st.sidebar.number_input("Enter day number (e.g., 31 for prediction)", min_value=1, max_value=100, value=31)
-
-# Add an Expander for the description of the models
-with st.expander("What is SVM?"):
-    st.write("""
-        **SVM Regression** is used for predicting continuous values like the number of COVID-19 cases.
-        **SVM Classification** is used for classifying data, here it's used to predict if cases will exceed 50,000.
-    """)
-
-# Display Historical Data Chart using Plotly
+# Plotting the historical data using Matplotlib
 st.subheader("Historical COVID-19 Cases (Last 30 Days)")
 st.write("The chart below shows the simulated historical data of COVID-19 cases for the last 30 days.")
 
-fig = px.line(df_historical, x="day", y="cases", title="Simulated Historical COVID-19 Cases", labels={"day": "Day", "cases": "Number of Cases"})
-st.plotly_chart(fig)
+# Plotting the historical data
+plt.figure(figsize=(10, 6))
+plt.plot(df_historical["day"], df_historical["cases"], marker='o', color='b', label="COVID-19 Cases")
+plt.xlabel('Day')
+plt.ylabel('Number of Cases')
+plt.title('Simulated Historical COVID-19 Cases')
+plt.grid(True)
+plt.legend()
 
-# Model Predictions Button
-if st.button("Predict"):
-    # Predict continuous cases using the SVM regression model
-    prediction_svm = svm_model.predict([[day_input]])
-
-    # Predict if cases will exceed 50k using the SVM classification model
-    prediction_class = svm_classifier.predict(np.array([[day_input]]))
-
-    # Display Predictions
-    st.subheader(f"Prediction for Day {day_input}")
-
-    st.write(f"### Predicted COVID-19 Cases (SVM Regression): {int(prediction_svm[0])} cases")
-    if prediction_class[0] >= 0.5:
-        st.write(f"### Prediction: **Cases will exceed 50,000** on Day {day_input} (SVM Classification).")
-    else:
-        st.write(f"### Prediction: **Cases will NOT exceed 50,000** on Day {day_input} (SVM Classification).")
-
-    # Show a summary
-    st.write("""
-    The model predicts the number of COVID-19 cases for the selected day. It also predicts if the cases will exceed 50,000.
-    """)
-
-# Footer (can add any message or link)
-st.markdown("---")
-st.markdown("Created by [Your Name](https://yourwebsite.com)")
-
-# Customize the theme (Optional)
-st.markdown("""
-    <style>
-        .stApp {
-            background-color: #f4f4f9;
-        }
-        .sidebar .sidebar-content {
-            background-color: #f7f7f9;
-        }
-    </style>
-""", unsafe_allow_html=True)
+# Display the plot in Streamlit
+st.pyplot(plt)
