@@ -30,6 +30,53 @@ covid_data = {
 
 # Convert to Pandas DataFrame
 df = pd.DataFrame([covid_data])
+
+# Print the DataFrame (for debugging)
+print(df)
+
+# Streamlit: Display the raw data in a table
+st.write("COVID-19 Data for the USA:")
+st.dataframe(df)
+
+# Plot COVID-19 data for the USA
+labels = ["Total Cases", "Active Cases", "Recovered", "Deaths"]
+values = [data["cases"], data["active"], data["recovered"], data["deaths"]]
+
+# Create bar plot
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.bar(labels, values, color=['blue', 'orange', 'green', 'red'])
+ax.set_xlabel("Category")import requests
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVR
+import streamlit as st
+
+# Fetch COVID-19 data
+url = "https://disease.sh/v3/covid-19/countries/usa"
+r = requests.get(url)
+data = r.json()
+
+# Print the raw data (for debugging)
+print(data)
+
+# Extract relevant fields
+covid_data = {
+    "cases": data["cases"],
+    "todayCases": data["todayCases"],
+    "deaths": data["deaths"],
+    "todayDeaths": data["todayDeaths"],
+    "recovered": data["recovered"],
+    "active": data["active"],
+    "critical": data["critical"],
+    "casesPerMillion": data["casesPerOneMillion"],
+    "deathsPerMillion": data["deathsPerOneMillion"],
+}
+
+# Convert to Pandas DataFrame
+df = pd.DataFrame([covid_data])
 print(df)import requests
 import pandas as pd
 import numpy as np
@@ -62,18 +109,12 @@ covid_data = {
 
 # Convert to Pandas DataFrame
 df = pd.DataFrame([covid_data])
-print(df)
 
-# Plot COVID-19 data for the USA
-labels = ["Total Cases", "Active Cases", "Recovered", "Deaths"]
-values = [data["cases"], data["active"], data["recovered"], data["deaths"]]
+ax.set_ylabel("Count")
+ax.set_title("COVID-19 Data for USA")
 
-plt.figure(figsize=(8, 5))
-plt.bar(labels, values, color=['blue', 'orange', 'green', 'red'])
-plt.xlabel("Category")
-plt.ylabel("Count")
-plt.title("COVID-19 Data for USA")
-plt.show()
+# Streamlit: Display the plot
+st.pyplot(fig)
 
 # Generate random historical data (last 30 days)
 np.random.seed(42)
@@ -83,38 +124,8 @@ historical_deaths = np.random.randint(500, 2000, size=30)
 # Create a DataFrame for historical data
 df_historical = pd.DataFrame({"cases": historical_cases, "deaths": historical_deaths})
 df_historical["day"] = range(1, 31)
-print(df_historical.head())
 
-# Prepare data for training
-X = df_historical[["day"]]  # Feature: Day
-y = df_historical["cases"]  # Target: Cases
-
-# Split data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Logistic Regression (used for classification, so we'll predict if cases exceed a threshold)
-log_reg_model = LogisticRegression()
-
-
-# Plot COVID-19 data for the USA
-labels = ["Total Cases", "Active Cases", "Recovered", "Deaths"]
-values = [data["cases"], data["active"], data["recovered"], data["deaths"]]
-
-plt.figure(figsize=(8, 5))
-plt.bar(labels, values, color=['blue', 'orange', 'green', 'red'])
-plt.xlabel("Category")
-plt.ylabel("Count")
-plt.title("COVID-19 Data for USA")
-plt.show()
-
-# Generate random historical data (last 30 days)
-np.random.seed(42)
-historical_cases = np.random.randint(30000, 70000, size=30)  # Simulated last 30 days cases
-historical_deaths = np.random.randint(500, 2000, size=30)
-
-# Create a DataFrame for historical data
-df_historical = pd.DataFrame({"cases": historical_cases, "deaths": historical_deaths})
-df_historical["day"] = range(1, 31)
+# Print historical data (for debugging)
 print(df_historical.head())
 
 # Prepare data for training
