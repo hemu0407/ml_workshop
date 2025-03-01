@@ -1,135 +1,48 @@
-import requests
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
+from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-from sklearn.svm import SVR
-from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
 
-# Fetch detailed COVID-19 data from API
-url = "https://disease.sh/v3/covid-19/countries/usa"
-r = requests.get(url)
-data = r.json()
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
 
-# Extracting detailed COVID-19 data with fallback in case some keys don't exist
-covid_data = {
-    "cases": data.get("cases", 0),
-    "todayCases": data.get("todayCases", 0),
-    "deaths": data.get("deaths", 0),
-    "todayDeaths": data.get("todayDeaths", 0),
-    "recovered": data.get("recovered", 0),
-    "active": data.get("active", 0),
-    "critical": data.get("critical", 0),
-    "casesPerMillion": data.get("casesPerOneMillion", 0),
-    "deathsPerMillion": data.get("deathsPerMillion", 0),  # Using get() method
-    "tests": data.get("tests", 0),
-    "testsPerMillion": data.get("testsPerMillion", 0),
-    "population": data.get("population", 0),
-    "continent": data.get("continent", "Unknown"),
-    "flag": data.get("countryInfo", {}).get("flag", "")
-}
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Convert to Pandas DataFrame
-df = pd.DataFrame([covid_data])
+# Train a RandomForest Classifier
+clf = RandomForestClassifier()
+clf.fit(X_train, y_train)
 
-# Displaying the extracted data in a tabular format
-st.subheader("Detailed COVID-19 Data for USA")
+# Define a function to take user input for the Iris flower features
+def user_input_features():
+    sepal_length = st.sidebar.slider('Sepal length (cm)', float(X[:,0].min()), float(X[:,0].max()), float(X[:,0].mean()))
+    sepal_width = st.sidebar.slider('Sepal width (cm)', float(X[:,1].min()), float(X[:,1].max()), float(X[:,1].mean()))
+    petal_length = st.sidebar.slider('Petal length (cm)', float(X[:,2].min()), float(X[:,2].max()), float(X[:,2].mean()))
+    petal_width = st.sidebar.slider('Petal width (cm)', float(X[:,3].min()), float(X[:,3].max()), float(X[:,3].mean()))
+    data = {'sepal_length': sepal_length,
+            'sepal_width': sepal_width,
+            'petal_length': petal_length,
+            'petal_width': petal_width}
+    features = pd.DataFrame(data, index=[0])
+    return features
+
+# Get user input
+df = user_input_features()
+
+# Display the user input
+st.subheader('User Input Features')
 st.write(df)
 
-# Historical Data: Generate random simulated historical data for the last 30 days
-np.random.seed(42)
-historical_cases = np.random.randint(30000, 70000, size=30)
-historical_deaths = np.random.randint(500, 2000, size=30)
-historical_recovered = np.random.randint(10000, 50000, size=30)
-df_historical = pd.DataFrame({
-    "cases": historical_cases,
-    "deaths": historical_deaths,
-    "recovered": historical_recovered
-})
-df_historical["day"] = range(1, 31)
+# Predict the class of the input features
+prediction = clf.predict(df)
+prediction_proba = clf.predict_proba(df)
 
-# Prepare data for regression
-X = df_historical[["day"]]
-y = df_historical["cases"]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Display the prediction and corresponding probability
+st.subheader('Prediction')
+st.write(iris.target_names[prediction][0])
 
-# SVM Regression Model
-svm_model = SVR(kernel='rbf')
-svm_model.fit(X_train, y_train)
-
-# Streamlit Interface
-st.title("COVID-19 Cases Prediction in USA")
-st.write("Using SVM to predict COVID-19 cases for the next day.")
-
-# User Input for prediction (day number input)
-day_input = st.number_input("Enter day number (e.g., 31 for prediction)", min_value=1, max_value=100)
-
-# Prediction logic that updates based on user input
-if st.button("Predict"):
-    prediction_svm = svm_model.predict([[day_input]])
-    st.write(f"Predicted cases for day {day_input} using SVM: {int(prediction_svm[0])}")
-
-    # Plotting predicted cases in historical data chart
-    st.subheader(f"Historical Data with Predicted Cases for Day {day_input}")
-    
-    # Adding predicted cases to the historical data
-    historical_cases_with_prediction = historical_cases.tolist() + [int(prediction_svm[0])]
-    df_historical_extended = pd.DataFrame({
-        "day": list(range(1, 32)),
-        "cases": historical_cases_with_prediction
-    })
-    
-    # Plot the data with the prediction included
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(df_historical_extended["day"], df_historical_extended["cases"], marker='o', label="Cases", color='blue')
-    ax.set_xlabel("Day")
-    ax.set_ylabel("Cases")
-    ax.set_title(f"COVID-19 Cases Prediction (up to Day {day_input})")
-    ax.grid(True)
-    ax.legend()
-    st.pyplot(fig)
-
-# Detailed Visualization: Historical Data
-st.subheader("Historical COVID-19 Cases, Deaths, and Recoveries (Last 30 Days)")
-
-# Plotting historical data
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(df_historical["day"], df_historical["cases"], marker='o', label="Cases", color='blue')
-ax.plot(df_historical["day"], df_historical["deaths"], marker='x', label="Deaths", color='red')
-ax.plot(df_historical["day"], df_historical["recovered"], marker='s', label="Recovered", color='green')
-ax.set_xlabel("Day")
-ax.set_ylabel("Count")
-ax.set_title("Simulated Historical COVID-19 Data (Cases, Deaths, Recovered) over the Last 30 Days")
-ax.legend()
-ax.grid(True)
-
-# Display the plot in Streamlit
-st.pyplot(fig)
-
-# Bar Chart: Current COVID-19 Statistics in the USA
-st.subheader("Current COVID-19 Statistics (As of Today)")
-
-labels = ["Total Cases", "Active Cases", "Recovered", "Deaths", "Tests Conducted"]
-values = [data["cases"], data["active"], data["recovered"], data["deaths"], data["tests"]]
-
-# Bar chart for the current data
-fig2, ax2 = plt.subplots(figsize=(10, 6))
-ax2.bar(labels, values, color=['blue', 'orange', 'green', 'red', 'purple'])
-ax2.set_xlabel("Category")
-ax2.set_ylabel("Count")
-ax2.set_title("Current COVID-19 Statistics for USA")
-ax2.grid(True)
-
-# Display the bar chart
-st.pyplot(fig2)
-
-# Additional Stats and Information
-st.subheader("Additional COVID-19 Statistics and Information")
-st.write(f"**Total Population**: {data['population']}")
-st.write(f"**Tests Conducted**: {data['tests']}")
-st.write(f"**Critical Cases**: {data['critical']}")
-st.write(f"**Deaths per Million**: {data.get('deathsPerMillion', 'N/A')}")
-st.write(f"**Cases per Million**: {data.get('casesPerMillion', 'N/A')}")
-st.write(f"**Continent**: {data.get('continent', 'Unknown')}")
-st.image(data.get('flag', ''), caption="Country Flag", width=200)
+st.subheader('Prediction Probability')
+st.write(pd.DataFrame(prediction_proba, columns=iris.target_names))
