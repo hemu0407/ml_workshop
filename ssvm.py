@@ -12,7 +12,7 @@ url = "https://disease.sh/v3/covid-19/countries/usa"
 r = requests.get(url)
 data = r.json()
 
-# Extract relevant fields from the data
+# Extract relevant fields
 covid_data = {
     "cases": data["cases"],
     "todayCases": data["todayCases"],
@@ -68,12 +68,34 @@ svm_classifier.fit(X_train_class, y_train_class)
 pred_class = svm_classifier.predict(np.array([[31]]))
 
 # Streamlit UI
+st.set_page_config(page_title="COVID-19 Cases Prediction in USA", layout="wide")
+
+# Title and Description
 st.title("COVID-19 Cases Prediction in the USA")
-st.write("This app predicts COVID-19 cases for the next day using an SVM model.")
+st.write("""
+    This app uses machine learning models (SVM) to predict the number of COVID-19 cases for the next day.
+    You can choose a specific day, and the model will predict:
+    1. The number of cases for that day using regression (SVM).
+    2. Whether the cases will exceed 50,000 using classification (SVM).
+""")
 
-# User input for prediction
-day_input = st.number_input("Enter day number (e.g., 31 for prediction)", min_value=1, max_value=100)
+# Input for the day number
+st.sidebar.header("Enter Day for Prediction")
+day_input = st.sidebar.number_input("Enter day number (e.g., 31 for prediction)", min_value=1, max_value=100, value=31)
 
+# Display Historical Data Chart
+st.subheader("Historical COVID-19 Cases in USA (Last 30 days)")
+st.write("This chart shows the simulated historical data of COVID-19 cases over the last 30 days.")
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(df_historical['day'], df_historical['cases'], marker='o', color='b', label="Cases")
+ax.set_title("COVID-19 Cases (Last 30 Days)", fontsize=16)
+ax.set_xlabel("Day", fontsize=12)
+ax.set_ylabel("Number of Cases", fontsize=12)
+ax.grid(True)
+st.pyplot(fig)
+
+# Model Predictions
 if st.button("Predict"):
     # Predict continuous cases using the SVM regression model
     prediction_svm = svm_model.predict([[day_input]])
@@ -81,9 +103,30 @@ if st.button("Predict"):
     # Predict if cases will exceed 50k using the SVM classification model
     prediction_class = svm_classifier.predict(np.array([[day_input]]))
 
-    # Display predictions
-    st.write(f"Predicted cases for day {day_input} using SVM (Continuous): {int(prediction_svm[0])}")
+    # Display Predictions
+    st.subheader(f"Prediction for Day {day_input}")
+
+    st.write(f"### Predicted COVID-19 Cases (SVM Regression): {int(prediction_svm[0])} cases")
     if prediction_class[0] >= 0.5:
-        st.write(f"Prediction: Cases predicted to exceed 50,000 on Day {day_input}.")
+        st.write(f"### Prediction: **Cases will exceed 50,000** on Day {day_input} (SVM Classification).")
     else:
-        st.write(f"Prediction: Cases predicted to NOT exceed 50,000 on Day {day_input}.")
+        st.write(f"### Prediction: **Cases will NOT exceed 50,000** on Day {day_input} (SVM Classification).")
+
+    # Show a summary
+    st.write("""
+    The model has predicted the number of COVID-19 cases for the given day based on the past data. The classification
+    model also predicts whether the number of cases will exceed 50,000.
+    """)
+
+# Display additional information
+st.sidebar.subheader("Model Information")
+st.sidebar.write("""
+    - **SVM Regression**: Predicts the number of COVID-19 cases for a specific day (continuous prediction).
+    - **SVM Classification**: Predicts whether the cases will exceed 50,000 for a specific day (binary classification).
+""")
+
+st.sidebar.subheader("About")
+st.sidebar.write("""
+    This app was created to demonstrate how machine learning can be applied to predict COVID-19 cases.
+    The data used for historical simulations is random and generated for demonstration purposes.
+""")
