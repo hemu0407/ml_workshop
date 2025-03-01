@@ -30,6 +30,38 @@ covid_data = {
 
 # Convert to Pandas DataFrame
 df = pd.DataFrame([covid_data])
+print(df)import requests
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVR
+import streamlit as st
+
+# Fetch COVID-19 data
+url = "https://disease.sh/v3/covid-19/countries/usa"
+r = requests.get(url)
+data = r.json()
+
+# Print the raw data (for debugging)
+print(data)
+
+# Extract relevant fields
+covid_data = {
+    "cases": data["cases"],
+    "todayCases": data["todayCases"],
+    "deaths": data["deaths"],
+    "todayDeaths": data["todayDeaths"],
+    "recovered": data["recovered"],
+    "active": data["active"],
+    "critical": data["critical"],
+    "casesPerMillion": data["casesPerOneMillion"],
+    "deathsPerMillion": data["deathsPerOneMillion"],
+}
+
+# Convert to Pandas DataFrame
+df = pd.DataFrame([covid_data])
 print(df)
 
 # Plot COVID-19 data for the USA
@@ -62,12 +94,46 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # Logistic Regression (used for classification, so we'll predict if cases exceed a threshold)
 log_reg_model = LogisticRegression()
-y_binary = (y > 50000).astype(int)  # For example, classify if cases exceed 50k
-log_reg_model.fit(X_train, y_binary)
+
+
+# Plot COVID-19 data for the USA
+labels = ["Total Cases", "Active Cases", "Recovered", "Deaths"]
+values = [data["cases"], data["active"], data["recovered"], data["deaths"]]
+
+plt.figure(figsize=(8, 5))
+plt.bar(labels, values, color=['blue', 'orange', 'green', 'red'])
+plt.xlabel("Category")
+plt.ylabel("Count")
+plt.title("COVID-19 Data for USA")
+plt.show()
+
+# Generate random historical data (last 30 days)
+np.random.seed(42)
+historical_cases = np.random.randint(30000, 70000, size=30)  # Simulated last 30 days cases
+historical_deaths = np.random.randint(500, 2000, size=30)
+
+# Create a DataFrame for historical data
+df_historical = pd.DataFrame({"cases": historical_cases, "deaths": historical_deaths})
+df_historical["day"] = range(1, 31)
+print(df_historical.head())
+
+# Prepare data for training
+X = df_historical[["day"]]  # Feature: Day
+y = df_historical["cases"]  # Target: Cases
+
+# Create binary target for Logistic Regression
+y_binary = (y > 50000).astype(int)  # Classify if cases exceed 50k
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y_binary, test_size=0.2, random_state=42)
+
+# Logistic Regression (used for classification, so we'll predict if cases exceed a threshold)
+log_reg_model = LogisticRegression()
+log_reg_model.fit(X_train, y_train)
 
 # Support Vector Regression (SVR) for continuous prediction of cases
 svr_model = SVR(kernel="rbf")
-svr_model.fit(X_train, y_train)
+svr_model.fit(X_train, y)
 
 # Predict next day's cases using Logistic Regression (binary prediction)
 log_reg_pred = log_reg_model.predict(np.array([[31]]))
