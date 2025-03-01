@@ -64,7 +64,7 @@ if st.button("Predict"):
 st.subheader("Historical COVID-19 Cases (Last 30 Days)")
 st.write("The chart below shows the simulated historical data of COVID-19 cases for the last 30 days.")
 
-# Plotting the historical data
+# Plotting the historical data (Line Chart)
 plt.figure(figsize=(10, 6))
 plt.plot(df_historical["day"], df_historical["cases"], marker='o', color='b', label="COVID-19 Cases")
 plt.xlabel('Day')
@@ -73,5 +73,24 @@ plt.title('Simulated Historical COVID-19 Cases')
 plt.grid(True)
 plt.legend()
 
-# Display the plot in Streamlit
+# Display the line plot in Streamlit
+st.pyplot(plt)
+
+# Bar Chart: Display Total Cases, Active Cases, Recovered, and Deaths
+st.subheader("Current COVID-19 Status in the USA")
+st.write("The chart below displays the current COVID-19 statistics for the USA.")
+
+# Prepare data for bar chart
+labels = ["Total Cases", "Active Cases", "Recovered", "Deaths"]
+values = [data["cases"], data["active"], data["recovered"], data["deaths"]]
+
+# Plotting the bar chart
+plt.figure(figsize=(10, 6))
+plt.bar(labels, values, color=['blue', 'orange', 'green', 'red'])
+plt.xlabel("Category")
+plt.ylabel("Count")
+plt.title("Current COVID-19 Statistics for USA")
+plt.grid(True)
+
+# Display the bar chart in Streamlit
 st.pyplot(plt)
