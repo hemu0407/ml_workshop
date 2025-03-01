@@ -12,22 +12,22 @@ url = "https://disease.sh/v3/covid-19/countries/usa"
 r = requests.get(url)
 data = r.json()
 
-# Extracting detailed COVID-19 data
+# Extracting detailed COVID-19 data with fallback in case some keys don't exist
 covid_data = {
-    "cases": data["cases"],
-    "todayCases": data["todayCases"],
-    "deaths": data["deaths"],
-    "todayDeaths": data["todayDeaths"],
-    "recovered": data["recovered"],
-    "active": data["active"],
-    "critical": data["critical"],
-    "casesPerMillion": data["casesPerOneMillion"],
-    "deathsPerMillion": data["deathsPerOneMillion"],
-    "tests": data["tests"],
-    "testsPerMillion": data["testsPerMillion"],
-    "population": data["population"],
-    "continent": data["continent"],
-    "flag": data["countryInfo"]["flag"]
+    "cases": data.get("cases", 0),
+    "todayCases": data.get("todayCases", 0),
+    "deaths": data.get("deaths", 0),
+    "todayDeaths": data.get("todayDeaths", 0),
+    "recovered": data.get("recovered", 0),
+    "active": data.get("active", 0),
+    "critical": data.get("critical", 0),
+    "casesPerMillion": data.get("casesPerOneMillion", 0),
+    "deathsPerMillion": data.get("deathsPerOneMillion", 0),
+    "tests": data.get("tests", 0),
+    "testsPerMillion": data.get("testsPerMillion", 0),
+    "population": data.get("population", 0),
+    "continent": data.get("continent", "Unknown"),
+    "flag": data.get("countryInfo", {}).get("flag", "")
 }
 
 # Convert to Pandas DataFrame
@@ -133,4 +133,3 @@ st.write(f"**Deaths per Million**: {data['deathsPerMillion']}")
 st.write(f"**Cases per Million**: {data['casesPerMillion']}")
 st.write(f"**Continent**: {data['continent']}")
 st.image(data['flag'], caption="Country Flag", width=200)
-
