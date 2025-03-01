@@ -45,71 +45,7 @@ values = [data["cases"], data["active"], data["recovered"], data["deaths"]]
 # Create bar plot
 fig, ax = plt.subplots(figsize=(8, 5))
 ax.bar(labels, values, color=['blue', 'orange', 'green', 'red'])
-ax.set_xlabel("Category")import requests
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVR
-import streamlit as st
-
-# Fetch COVID-19 data
-url = "https://disease.sh/v3/covid-19/countries/usa"
-r = requests.get(url)
-data = r.json()
-
-# Print the raw data (for debugging)
-print(data)
-
-# Extract relevant fields
-covid_data = {
-    "cases": data["cases"],
-    "todayCases": data["todayCases"],
-    "deaths": data["deaths"],
-    "todayDeaths": data["todayDeaths"],
-    "recovered": data["recovered"],
-    "active": data["active"],
-    "critical": data["critical"],
-    "casesPerMillion": data["casesPerOneMillion"],
-    "deathsPerMillion": data["deathsPerOneMillion"],
-}
-
-# Convert to Pandas DataFrame
-df = pd.DataFrame([covid_data])
-print(df)import requests
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVR
-import streamlit as st
-
-# Fetch COVID-19 data
-url = "https://disease.sh/v3/covid-19/countries/usa"
-r = requests.get(url)
-data = r.json()
-
-# Print the raw data (for debugging)
-print(data)
-
-# Extract relevant fields
-covid_data = {
-    "cases": data["cases"],
-    "todayCases": data["todayCases"],
-    "deaths": data["deaths"],
-    "todayDeaths": data["todayDeaths"],
-    "recovered": data["recovered"],
-    "active": data["active"],
-    "critical": data["critical"],
-    "casesPerMillion": data["casesPerOneMillion"],
-    "deathsPerMillion": data["deathsPerOneMillion"],
-}
-
-# Convert to Pandas DataFrame
-df = pd.DataFrame([covid_data])
-
+ax.set_xlabel("Category")
 ax.set_ylabel("Count")
 ax.set_title("COVID-19 Data for USA")
 
