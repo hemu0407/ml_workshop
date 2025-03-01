@@ -22,7 +22,7 @@ covid_data = {
     "active": data.get("active", 0),
     "critical": data.get("critical", 0),
     "casesPerMillion": data.get("casesPerOneMillion", 0),
-    "deathsPerMillion": data.get("deathsPerOneMillion", 0),
+    "deathsPerMillion": data.get("deathsPerMillion", 0),  # Using get() method
     "tests": data.get("tests", 0),
     "testsPerMillion": data.get("testsPerMillion", 0),
     "population": data.get("population", 0),
@@ -129,7 +129,7 @@ st.subheader("Additional COVID-19 Statistics and Information")
 st.write(f"**Total Population**: {data['population']}")
 st.write(f"**Tests Conducted**: {data['tests']}")
 st.write(f"**Critical Cases**: {data['critical']}")
-st.write(f"**Deaths per Million**: {data['deathsPerMillion']}")
-st.write(f"**Cases per Million**: {data['casesPerMillion']}")
-st.write(f"**Continent**: {data['continent']}")
-st.image(data['flag'], caption="Country Flag", width=200)
+st.write(f"**Deaths per Million**: {data.get('deathsPerMillion', 'N/A')}")
+st.write(f"**Cases per Million**: {data.get('casesPerMillion', 'N/A')}")
+st.write(f"**Continent**: {data.get('continent', 'Unknown')}")
+st.image(data.get('flag', ''), caption="Country Flag", width=200)
